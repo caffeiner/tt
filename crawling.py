@@ -4,10 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 import os
-import webdriver_manager.chrome
 #crawling.spec file hidden imports >> 'selenium','selenium.webdriver.common.by','selenium.webdriver.common.keys'
-driver = webdriver.Chrome()
-#executable_path="/home/ubuntu/jenkins-backend/BackEnd/crawling/tt/chromedriver.exe"
+driver = webdriver.Chrome(executable_path=r"/home/ubuntu/jenkins-backend/BackEnd/crawling/tt/chromedriver.exe")
+#
 driver.get("https://burst.shopify.com/")
 elem = driver.find_element(By.CSS_SELECTOR, "#search_search")
 elem.send_keys("cat")
