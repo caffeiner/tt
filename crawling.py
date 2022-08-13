@@ -2,61 +2,67 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-import time
 import os
-from selenium.webdriver.chrome.options import Options
+import pymysql
+import glob
 
-#crawling.spec file hidden imports >> 'selenium','selenium.webdriver.common.by','selenium.webdriver.common.keys'
-#driver = webdriver.Chrome(executable_path="/home/ubuntu/jenkins-backend/BackEnd/crawling/tt/chromedriver")
-
-
-
-chrome_options = Options()
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--disable-dev-shm-usage')
-driver = webdriver.Chrome("/home/ubuntu/jenkins-backend/BackEnd/crawling/tt/chromedriver",chrome_options=chrome_options)
-driver.get('https://www.google.nl/')
-
+#for use pyinstaller, you need to add in crawling.spec file, hidden imports >> 'selenium','selenium.webdriver.common.by','selenium.webdriver.common.keys'
+driver = webdriver.Chrome()
 driver.get("https://burst.shopify.com/")
 elem = driver.find_element(By.CSS_SELECTOR, "#search_search")
 elem.send_keys("cat")
 elem.send_keys(Keys.RETURN)
 
+'''     picture table column
+`pictureIdx` int NOT NULL AUTO_INCREMENT,
+`filepath` varchar(100) NOT NULL,
+`tag` varchar(50) NOT NULL,
+`publicFlag` tinyint(1) DEFAULT '1',
+`isPicture` tinyint(1) DEFAULT '1',         #사진인지 동영상인지, 1이면 사진
+`id` varchar(30) DEFAULT NULL,
+`updateTime` timestamp NULL DEFAULT CURRENT_TIMESTAMP'''
+
+conn = pymysql.connect(host='i7a707.p.ssafy.io',
+                       port=9888,
+                       user='root',
+                       password='a707!1402',
+                       db='miru',
+                       charset='utf8')
+
 def crawlImage():
     images = driver.find_elements(By.CSS_SELECTOR, "#Main > section:nth-child(1) > div.grid.gutter-bottom > div > div > div > div.photo-tile > button")
-    for image in images:
+
+    for i in range(len(images)):
         try:
-            image.click()
-            print(image)
-            time.sleep(1)
+            images[i].click()
+            print(images[i])
             driver.find_element(By.CSS_SELECTOR, "#CloseModal").click()
         except:
             pass
+        imageClick = driver.find_element(By.CSS_SELECTOR,
+                                          "#Main > section:nth-child(1) > div.grid.gutter-bottom > div > div:nth-child("+str(i+1)+") > div > div.photo-tile > a > div > img")
+        imageClick.click()
 
+        #crawlTags()
+        tags = driver.find_elements(By.CLASS_NAME, "nowrap")
+        tagSql = ""
+        for tag in tags:
+            tagSql += tag.get_attribute('innerHTML') +","
+        tagSql = tagSql[:-1] #맨 마지막 콤마 제거
+        driver.back() #뒤로가기
 
-def crawlTags():
-    tags = driver.find_elements(By.CSS_SELECTOR, "#Main > section:nth-child(1) > div.grid.gutter-bottom > div > div:nth-child(1) > div > div.photo-tile > a")
-    #Main > section:nth-child(1) > div.grid.gutter-bottom > div > div:nth-child(1) > div > div.photo-tile > a
-    #Main > section:nth-child(1) > div.grid.gutter-bottom > div > div:nth-child(2) > div > div.photo-tile > a
+        list_of_files = glob.glob('/var/www/html/S07P12A707/BackEnd/src/main/resources/static/img/*')
+        latest_file = max(list_of_files, key=os.path.getctime)
+        print(latest_file)
 
-    for tag in tags:
-        tag.click()
-        print(tag)
-        print(driver.find_elements(By.CSS_SELECTOR,"#Main > section:nth-child(1) > div > div > div > div.photo__details > p:nth-child(5) > a"))
+        #insert into user (id, password, email, recommendFlag, salt) values ('manager','a707!1402','kmj9247@naver.com', 1, 'salt');
+        #insert into picture (filepath, tag, isPicture, id) values ('/test/path/filename.jpg','cat,animal',1,'manager');
 
+        sql = "INSERT INTO picture (filepath, tag, isPicture, id) VALUES (%s, %s, %s, %s)"
 
-def changeName(path):
-    count = 1
-    filenames = [filename for filename in os.listdir(path) if filename.endswith("jpg")]
-    for filename in filenames:
-        print(filename)
-        print(path+filename)
-        os.rename(path+filename, path+ str(count)+ ".jpg")
-        count += 1
+        cur = conn.cursor()
+        cur.execute(sql, (latest_file, tagSql, 1, 'manager'))
+    conn.commit()
 
-#changeName("C:\\Users\\SSAFY\\Downloads\\")
-#HOME/Downloads
-#crawlTags()
 crawlImage()
 driver.close()
