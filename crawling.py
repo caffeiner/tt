@@ -5,9 +5,15 @@ from selenium.webdriver.common.keys import Keys
 import os
 import pymysql
 import glob
+from selenium.webdriver.chrome.options import Options
 
 #for use pyinstaller, you need to add in crawling.spec file, hidden imports >> 'selenium','selenium.webdriver.common.by','selenium.webdriver.common.keys'
-driver = webdriver.Chrome()
+chrome_options = Options()
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--disable-dev-shm-usage')
+
+driver = webdriver.Chrome("/var/www/html/crawling/chromedriver", chrome_options=chrome_options)
 driver.get("https://burst.shopify.com/")
 elem = driver.find_element(By.CSS_SELECTOR, "#search_search")
 elem.send_keys("cat")
