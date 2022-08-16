@@ -47,13 +47,14 @@ def crawlImage():
     sql = "INSERT INTO picture (filepath, tag, publicFlag, isPicture, id) VALUES (%s, %s, %s, %s, %s)"
     file_name_list = []
     # root = "./img/"
+    saveRoot = "/var/www/html/crawling/img/"
     root = "/var/www/html/S07P12A707/BackEnd/src/main/resources/static/img/"
 
     for image in images:
         url = image.get_attribute('data-modal-image-url')
         print('url: ' + url)
         parsed_file = urlparse(url)
-        file_name = root + os.path.basename(parsed_file.path)
+        file_name = saveRoot + os.path.basename(parsed_file.path)
         file = requests.get(url)
         file_name_list.append(file_name)
         open(file_name, 'wb').write(file.content)
