@@ -45,7 +45,7 @@ def crawlImage():
                                   "#Main > section:nth-child(1) > div.grid.gutter-bottom > div > div > div > div.photo-tile > button")
 
     sql = "INSERT INTO picture (filepath, tag, publicFlag, isPicture, id) VALUES (%s, %s, %s, %s, %s)"
-    file_name_list = []
+    db_name_list = []
     # root = "./img/"
     saveRoot = "/var/www/html/crawling/img/"
     root = "/var/www/html/S07P12A707/BackEnd/src/main/resources/static/img/"
@@ -55,8 +55,9 @@ def crawlImage():
         print('url: ' + url)
         parsed_file = urlparse(url)
         file_name = saveRoot + os.path.basename(parsed_file.path)
+        db_file_name = root + os.path.basename(parsed_file.path)
         file = requests.get(url)
-        file_name_list.append(file_name)
+        db_name_list.append(db_file_name)
         open(file_name, 'wb').write(file.content)
 
     length = len(images)
@@ -65,8 +66,8 @@ def crawlImage():
                                          "#Main > section:nth-child(1) > div.grid.gutter-bottom > div > div:nth-child(" + str(
                                              i + 1) + ") > div > div.photo-tile > a > div > img")
 
-        file_name = file_name_list[i]
-        print('file_name: ' + file_name)
+        dbUrl = db_name_list[i]
+        print('dbUrl: ' + dbUrl)
         imageClick.click()
 
         # crawlTags
@@ -79,7 +80,7 @@ def crawlImage():
         driver.back()  # 뒤로가기
 
         cur = conn.cursor()
-        cur.execute(sql, (file_name, tagSql, 1, 1, 'manager'))
+        cur.execute(sql, (dbUrl, tagSql, 1, 1, 'manager'))
         print(str(i + 1) + "/" + str(length) + " End of One Cycle & Execute")
     conn.commit()
 
